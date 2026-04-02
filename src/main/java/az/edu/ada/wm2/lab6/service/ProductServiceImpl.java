@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,54 +26,77 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponseDto createProduct(ProductRequestDto dto) {
+        validatePrice(dto.getPrice());
+
         Product product = productMapper.toEntity(dto);
-        if (dto.getCategoryIds() != null && !dto.getCategoryIds().isEmpty()) {
-            List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
-            product.setCategories(categories);
-        }
+        attachCategories(product, dto.getCategoryIds());
+
         Product savedProduct = productRepository.save(product);
         return productMapper.toResponseDto(savedProduct);
     }
 
     @Override
     public ProductResponseDto getProductById(UUID id) {
-        return productRepository.findById(id).map(productMapper::toResponseDto).orElse(null);
+        return productRepository.findById(id)
+                .map(productMapper::toResponseDto)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
 
     @Override
     public List<ProductResponseDto> getAllProducts() {
-        return productRepository.findAll().stream().map(productMapper::toResponseDto).toList();
+        return productRepository.findAll().stream()
+                .map(productMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public ProductResponseDto updateProduct(UUID id, ProductRequestDto dto) {
-        Product existing = productRepository.findById(id).orElse(null);
-        if (existing == null) return null;
+        validatePrice(dto.getPrice());
+
+        Product existing = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
         existing.setProductName(dto.getProductName());
         existing.setPrice(dto.getPrice());
         existing.setExpirationDate(dto.getExpirationDate());
-
-        if (dto.getCategoryIds() != null) {
-            List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
-            existing.setCategories(categories);
-        }
+        attachCategories(existing, dto.getCategoryIds());
 
         return productMapper.toResponseDto(productRepository.save(existing));
     }
 
     @Override
     public void deleteProduct(UUID id) {
-        productRepository.deleteById(id);
+        Product existing = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+        productRepository.delete(existing);
     }
 
     @Override
     public List<ProductResponseDto> getProductsExpiringBefore(LocalDate date) {
-        return productRepository.findByExpirationDateBefore(date).stream().map(productMapper::toResponseDto).toList();
+        return productRepository.findByExpirationDateBefore(date).stream()
+                .map(productMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ProductResponseDto> getProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
-        return productRepository.findByPriceBetween(minPrice, maxPrice).stream().map(productMapper::toResponseDto).toList();
+        return productRepository.findByPriceBetween(minPrice, maxPrice).stream()
+                .map(productMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    private void attachCategories(Product product, List<UUID> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return;
+        }
+
+        List<Category> categories = categoryRepository.findAllById(categoryIds);
+        product.setCategories(categories);
+    }
+
+    private void validatePrice(BigDecimal price) {
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Price must be positive");
+        }
     }
 }

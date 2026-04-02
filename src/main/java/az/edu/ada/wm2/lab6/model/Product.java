@@ -1,12 +1,25 @@
 package az.edu.ada.wm2.lab6.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
-import jakarta.persistence.*;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Product {
     @Id
@@ -15,10 +28,6 @@ public class Product {
     private String productName;
     private BigDecimal price;
     private LocalDate expirationDate;
-
-    // Constructors
-    public Product() {
-    }
 
     public Product(String productName, BigDecimal price, LocalDate expirationDate) {
         this.productName = productName;

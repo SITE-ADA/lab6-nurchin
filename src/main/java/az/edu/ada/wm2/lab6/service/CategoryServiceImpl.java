@@ -32,26 +32,36 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryResponseDto> getAll() {
-        return categoryRepository.findAll().stream().map(CategoryMapper::toResponseDto).toList();
+        return categoryRepository.findAll().stream()
+                .map(CategoryMapper::toResponseDto)
+                .toList();
     }
 
     @Override
     public CategoryResponseDto addProduct(UUID categoryId, UUID productId) {
-        Category category = categoryRepository.findById(categoryId).orElse(null);
-        Product product = productRepository.findById(productId).orElse(null);
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-        if (category != null && product != null) {
+        if (!product.getCategories().contains(category)) {
             product.getCategories().add(category);
-            productRepository.save(product);
         }
+        if (!category.getProducts().contains(product)) {
+            category.getProducts().add(product);
+        }
+
+        productRepository.save(product);
         return CategoryMapper.toResponseDto(category);
     }
 
     @Override
     public List<ProductResponseDto> getProducts(UUID categoryId) {
-        Category category = categoryRepository.findById(categoryId).orElse(null);
-        if (category == null || category.getProducts() == null) return List.of();
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
 
-        return category.getProducts().stream().map(productMapper::toResponseDto).toList();
+        return category.getProducts().stream()
+                .map(productMapper::toResponseDto)
+                .toList();
     }
 }

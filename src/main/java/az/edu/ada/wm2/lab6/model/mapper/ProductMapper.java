@@ -7,11 +7,11 @@ import az.edu.ada.wm2.lab6.model.dto.ProductResponseDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.Collections;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
-    // Entity → Response DTO
     @Mapping(target = "categoryNames", source = "categories")
     ProductResponseDto toResponseDto(Product product);
 
@@ -20,9 +20,10 @@ public interface ProductMapper {
     Product toEntity(ProductRequestDto dto);
 
     default List<String> mapCategoriesToNames(List<Category> categories) {
-        if (categories == null) {
-            return null;
+        if (categories == null || categories.isEmpty()) {
+            return Collections.emptyList();
         }
+
         return categories.stream()
                 .map(Category::getName)
                 .toList();
