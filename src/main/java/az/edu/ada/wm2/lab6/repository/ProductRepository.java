@@ -7,7 +7,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+
 public interface ProductRepository extends JpaRepository<Product, UUID> {
+
     List<Product> findByExpirationDateBefore(LocalDate date);
+
     List<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
 }
+
+

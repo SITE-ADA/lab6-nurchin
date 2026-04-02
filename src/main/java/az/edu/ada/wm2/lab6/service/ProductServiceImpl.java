@@ -26,8 +26,6 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponseDto createProduct(ProductRequestDto dto) {
-        validatePrice(dto.getPrice());
-
         Product product = productMapper.toEntity(dto);
         attachCategories(product, dto.getCategoryIds());
 
@@ -39,7 +37,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDto getProductById(UUID id) {
         return productRepository.findById(id)
                 .map(productMapper::toResponseDto)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElse(null);
     }
 
     @Override
@@ -51,10 +49,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponseDto updateProduct(UUID id, ProductRequestDto dto) {
-        validatePrice(dto.getPrice());
-
-        Product existing = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+        Product existing = productRepository.findById(id).orElse(null);
+        if (existing == null) return null;
 
         existing.setProductName(dto.getProductName());
         existing.setPrice(dto.getPrice());
@@ -66,9 +62,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProduct(UUID id) {
-        Product existing = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
-        productRepository.delete(existing);
+        productRepository.deleteById(id);
     }
 
     @Override
@@ -85,18 +79,24 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
-    private void attachCategories(Product product, List<UUID> categoryIds) {
-        if (categoryIds == null || categoryIds.isEmpty()) {
-            return;
+
+
+        private void attachCategories(Product product, List<UUID> categoryIds) {
+            if (categoryIds == null || categoryIds.isEmpty()) {
+                return;
+            }
+
+            List<Category> categories = categoryRepository.findAllById(categoryIds);
+            product.setCategories(categories);
+
+            for (Category category : categories) {
+                if (!category.getProducts().contains(product)) {
+                    category.getProducts().add(product);
+                }
+            }
         }
 
-        List<Category> categories = categoryRepository.findAllById(categoryIds);
-        product.setCategories(categories);
-    }
 
-    private void validatePrice(BigDecimal price) {
-        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Price must be positive");
-        }
     }
 }
+
