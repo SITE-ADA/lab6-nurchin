@@ -1,4 +1,3 @@
-./gradlew bootRun
 #!/bin/sh
 
 #

@@ -21,18 +21,11 @@ public class Product {
     }
 
     public Product(String productName, BigDecimal price, LocalDate expirationDate) {
-        this.id = UUID.randomUUID();
         this.productName = productName;
         this.price = price;
         this.expirationDate = expirationDate;
     }
 
-    public Product(UUID id, String productName, BigDecimal price, LocalDate expirationDate) {
-        this.id = id;
-        this.productName = productName;
-        this.price = price;
-        this.expirationDate = expirationDate;
-    }
 
     // Getters and Setters
     public UUID getId() {
