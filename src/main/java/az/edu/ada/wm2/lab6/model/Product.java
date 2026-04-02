@@ -3,8 +3,14 @@ package az.edu.ada.wm2.lab6.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import jakarta.persistence.*;
+import java.util.List;
+import java.util.ArrayList;
 
+@Entity
 public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String productName;
     private BigDecimal price;
@@ -61,6 +67,21 @@ public class Product {
         this.expirationDate = expirationDate;
     }
 
+    @ManyToMany
+    @JoinTable(
+            name = "product_category",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private List<Category> categories = new ArrayList<>();
+
+    public List<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
+    }
     @Override
     public String toString() {
         return "Product{" +
